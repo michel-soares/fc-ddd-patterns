@@ -28,26 +28,11 @@ export default class OrderRepository implements OrderRepositoryInterface {
     
   }
 
-  async update(entity: Order): Promise<void> {
-    
-    /*
-    await OrderModel.update(
-      {
-        id: entity.id,
-        customer_id: entity.customerId,
-        total: entity.total(),
-        items: entity.items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          product_id: item.productId,
-          quantity: item.quantity,          
-        }))
-      }
-      , { where: { id: entity.id }});
-    
-     */
-    let orderModel: OrderModel;
+
+  async update(entity: Order): Promise<void> {    
+    let orderModel: OrderModel;    
+
+    // Pesquisando para atualizar,
     
     try {
       orderModel = await OrderModel.findOne({
@@ -59,9 +44,10 @@ export default class OrderRepository implements OrderRepositoryInterface {
       });
     } catch (error) {
       throw new Error("Order not found");
-    }
+    }    
+    // Não encontrei um comando para atualizar a order e todos os itens automaticamente, inclusive preparado para remover e incluir novos.
     
-    
+    // Verificando os itens que ainda existem para atualizar ou que não existe mais para apagar
     await orderModel.items.forEach(itemBanco => {
         const itemEncontradoParametro = entity.items.find(itemParametros => itemParametros.id == itemBanco.id);
         if(itemEncontradoParametro == null){          
@@ -78,6 +64,7 @@ export default class OrderRepository implements OrderRepositoryInterface {
         }
     });
 
+    // Verificando os itens novos para adicionar
     await entity.items.forEach(itemParametro => {
       const itemEncontradoBanco = orderModel.items.find(itemBanco => itemBanco.id == itemParametro.id);
       if(itemEncontradoBanco == null){
@@ -98,7 +85,7 @@ export default class OrderRepository implements OrderRepositoryInterface {
     }
     );
     
-    
+    //atualizando  order    
     await orderModel.update(
       {
         id: entity.id,
