@@ -19,8 +19,9 @@ describe("Order repository test", () => {
     sequelize = new Sequelize({
       dialect: "sqlite",
       storage: ":memory:",
-      //logging: false,
-      logging: console.log,
+      logging: false,
+      //logging: console.log,
+      //logQueryParameters:true,
       sync: { force: true },
     });
 
