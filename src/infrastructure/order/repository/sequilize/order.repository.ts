@@ -7,8 +7,8 @@ import OrderModel from "./order.model";
 export default class OrderRepository implements OrderRepositoryInterface {
   
   async create(entity: Order): Promise<void> {
-    await OrderModel.create(
-      {
+    await OrderModel.create(      
+      {        
         id: entity.id,
         customer_id: entity.customerId,
         total: entity.total(),
@@ -29,7 +29,25 @@ export default class OrderRepository implements OrderRepositoryInterface {
   }
 
   async update(entity: Order): Promise<void> {
-    let orderModel;
+    
+    /*
+    await OrderModel.update(
+      {
+        id: entity.id,
+        customer_id: entity.customerId,
+        total: entity.total(),
+        items: entity.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          product_id: item.productId,
+          quantity: item.quantity,          
+        }))
+      }
+      , { where: { id: entity.id }});
+    
+     */
+    let orderModel: OrderModel;
     
     try {
       orderModel = await OrderModel.findOne({
@@ -44,20 +62,50 @@ export default class OrderRepository implements OrderRepositoryInterface {
     }
     
     
+    await orderModel.items.forEach(itemBanco => {
+        const itemEncontradoParametro = entity.items.find(itemParametros => itemParametros.id == itemBanco.id);
+        if(itemEncontradoParametro == null){          
+          itemBanco.destroy();
+        }else{
+          itemBanco.update(
+                      {                        
+                        name: itemEncontradoParametro.name,
+                        price: itemEncontradoParametro.price,
+                        product_id: itemEncontradoParametro.productId,
+                        quantity: itemEncontradoParametro.quantity,                           
+                      },
+          )
+        }
+    });
+
+    await entity.items.forEach(itemParametro => {
+      const itemEncontradoBanco = orderModel.items.find(itemBanco => itemBanco.id == itemParametro.id);
+      if(itemEncontradoBanco == null){
+        OrderItemModel.create(
+          {    
+            order_id: entity.id,
+            id: itemParametro.id,                    
+            name: itemParametro.name,
+            price: itemParametro.price,
+            product_id: itemParametro.productId,
+            quantity: itemParametro.quantity,                           
+          }
+        )
+        //.then(x => orderModel.items.push(x)) ;
+        
+
+      }
+    }
+    );
+    
+    
     await orderModel.update(
       {
         id: entity.id,
         customer_id: entity.customerId,
-        total: entity.total(),
-        items: entity.items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          product_id: item.productId,
-          quantity: item.quantity,          
-        }))
-            }     
-    );
+        total: entity.total(),                  
+        });
+          
   }
 
   async find(id: string): Promise<Order> {
